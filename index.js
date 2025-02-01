@@ -24,37 +24,41 @@ app.get('/', (req, res) => {
 });
 
 // Test Firestore connection
-app.get('/test', async (req, res) => {
+app.get('/stats', async (req, res) => {
     try {
-        console.log('Testing Firestore connection...');
-        
-        // Try to write a test document
-        const docRef = await db.collection('test_collection').add({
-            test: true,
-            timestamp: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        console.log('Test document written with ID:', docRef.id);
-        
-        res.json({
-            success: true,
-            message: 'Firestore connection successful',
-            documentId: docRef.id
-        });
+      console.log('Fetching stats...');
+  
+      // Suppose your ad events are in `ad_events` collection
+      const snapshot = await db.collection('ad_events').get();
+  
+      let totalViews = 0;
+      let totalClicks = 0;
+  
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.type === 'view') totalViews++;
+        if (data.type === 'click') totalClicks++;
+      });
+  
+      res.json({
+        success: true,
+        totalViews,
+        totalClicks
+      });
     } catch (error) {
-        console.error('Firestore test error:', {
-            code: error.code,
-            message: error.message
-        });
-        
-        res.status(500).json({
-            success: false,
-            error: error.message,
-            code: error.code
-        });
+      console.error('Firestore stats error:', {
+        code: error.code,
+        message: error.message
+      });
+      
+      res.status(500).json({
+        success: false,
+        error: error.message,
+        code: error.code
+      });
     }
-});
-
+  });
+  
 // Record ad view
 app.post('/api/adtrack/view', async (req, res) => {
     try {
