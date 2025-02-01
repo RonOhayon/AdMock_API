@@ -5,11 +5,11 @@ const cors = require('cors');
 const app = express();
 
 // Initialize Firebase Admin
-const serviceAccount = require('./serviceAccountKey.json');
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: 'ad-mock-505c7'
+    credential: admin.credential.cert(serviceAccount)
 });
+
 
 const db = admin.firestore();
 
