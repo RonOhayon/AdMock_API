@@ -43,7 +43,8 @@ app.get('/stats', async (req, res) => {
       res.json({
         success: true,
         totalViews,
-        totalClicks
+        totalClicks,
+
       });
     } catch (error) {
       console.error('Firestore stats error:', {
@@ -91,6 +92,38 @@ app.post('/api/adtrack/view', async (req, res) => {
         });
     }
 });
+app.post('/api/adtrack/click', async (req, res) => {
+  try {
+    const { packageId, adId, deviceId } = req.body;
+    
+    if (!packageId || !adId || !deviceId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const clickData = {
+      packageId,
+      adId,
+      deviceId,
+      type: 'click',
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    const docRef = await db.collection('ad_events').add(clickData);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Ad click recorded',
+      documentId: docRef.id
+    });
+  } catch (error) {
+    console.error('Error recording click:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 
 const PORT = 3000;
 app.listen(PORT, () => {
