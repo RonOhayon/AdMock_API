@@ -131,6 +131,51 @@ app.post('/api/adtrack/view', async (req, res) => {
         });
     }
 });
+app.post('/api/adtrack/view/arrays', async (req, res) => {
+  try {
+      let events = req.body;
+
+      // Ensure the request is an array
+      if (!Array.isArray(events)) {
+          events = [events]; // Convert single object to an array
+      }
+
+      const results = [];
+
+      for (const event of events) {
+          const { packageId, adId, deviceId, timestamp } = event;
+
+          if (!packageId || !adId || !deviceId || !timestamp) {
+              return res.status(400).json({ error: 'Missing required fields' });
+          }
+
+          const viewData = {
+              packageId,
+              adId,
+              deviceId,
+              type: 'view',
+              timestamp: new Date(timestamp) // Convert to JavaScript Date object
+          };
+
+          const docRef = await db.collection('ad_events').add(viewData);
+          results.push({ success: true, documentId: docRef.id });
+      }
+
+      res.status(201).json({
+          success: true,
+          message: `${results.length} views recorded`,
+          results
+      });
+
+  } catch (error) {
+      console.error('Error recording views:', error);
+      res.status(500).json({
+          success: false,
+          error: error.message
+      });
+  }
+});
+
 app.post('/api/adtrack/click', async (req, res) => {
   try {
     const { packageId, adId, deviceId } = req.body;
